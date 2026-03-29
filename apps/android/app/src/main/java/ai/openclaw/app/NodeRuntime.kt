@@ -120,6 +120,46 @@ class NodeRuntime(
     appContext = appContext,
   )
 
+  // operatorSession must be declared before a2uiHandler: a2uiHandler captures it
+  // in a lambda, and K2 requires forward-referenced properties to be initialized first.
+  // It also stays before gatewayEventHandler which captures it by value (not lambda).
+  private val operatorSession =
+    GatewaySession(
+      scope = scope,
+      identityStore = identityStore,
+      deviceAuthStore = deviceAuthStore,
+      onConnected = { name, remote, mainSessionKey ->
+        operatorConnected = true
+        operatorStatusText = "Connected"
+        _serverName.value = name
+        _remoteAddress.value = remote
+        _seamColorArgb.value = DEFAULT_SEAM_COLOR_ARGB
+        syncMainSessionKey(resolveAgentIdFromMainSessionKey(mainSessionKey))
+        updateStatus()
+        micCapture.onGatewayConnectionChanged(true)
+        scope.launch {
+          refreshHomeCanvasOverviewIfConnected()
+          if (voiceReplySpeakerLazy.isInitialized()) {
+            voiceReplySpeaker.refreshConfig()
+          }
+        }
+      },
+      onDisconnected = { message ->
+        operatorConnected = false
+        operatorStatusText = message
+        _serverName.value = null
+        _remoteAddress.value = null
+        _seamColorArgb.value = DEFAULT_SEAM_COLOR_ARGB
+        chat.applyMainSessionKey(resolveMainSessionKey())
+        chat.onDisconnected(message)
+        updateStatus()
+        micCapture.onGatewayConnectionChanged(false)
+      },
+      onEvent = { event, payloadJson ->
+        handleGatewayEvent(event, payloadJson)
+      },
+    )
+
   private val smsHandlerImpl: SmsHandler = SmsHandler(
     sms = sms,
   )
@@ -243,43 +283,6 @@ class NodeRuntime(
   private var operatorConnected = false
   private var operatorStatusText: String = "Offline"
   private var nodeStatusText: String = "Offline"
-
-  private val operatorSession =
-    GatewaySession(
-      scope = scope,
-      identityStore = identityStore,
-      deviceAuthStore = deviceAuthStore,
-      onConnected = { name, remote, mainSessionKey ->
-        operatorConnected = true
-        operatorStatusText = "Connected"
-        _serverName.value = name
-        _remoteAddress.value = remote
-        _seamColorArgb.value = DEFAULT_SEAM_COLOR_ARGB
-        syncMainSessionKey(resolveAgentIdFromMainSessionKey(mainSessionKey))
-        updateStatus()
-        micCapture.onGatewayConnectionChanged(true)
-        scope.launch {
-          refreshHomeCanvasOverviewIfConnected()
-          if (voiceReplySpeakerLazy.isInitialized()) {
-            voiceReplySpeaker.refreshConfig()
-          }
-        }
-      },
-      onDisconnected = { message ->
-        operatorConnected = false
-        operatorStatusText = message
-        _serverName.value = null
-        _remoteAddress.value = null
-        _seamColorArgb.value = DEFAULT_SEAM_COLOR_ARGB
-        chat.applyMainSessionKey(resolveMainSessionKey())
-        chat.onDisconnected(message)
-        updateStatus()
-        micCapture.onGatewayConnectionChanged(false)
-      },
-      onEvent = { event, payloadJson ->
-        handleGatewayEvent(event, payloadJson)
-      },
-    )
 
   private val nodeSession =
     GatewaySession(
