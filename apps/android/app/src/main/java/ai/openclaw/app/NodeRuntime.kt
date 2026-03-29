@@ -22,6 +22,7 @@ import ai.openclaw.app.protocol.OpenClawCanvasA2UIAction
 import ai.openclaw.app.voice.MicCaptureManager
 import ai.openclaw.app.voice.TalkModeManager
 import ai.openclaw.app.voice.VoiceConversationEntry
+import ai.openclaw.app.voice.VoiceWakeManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -142,6 +143,14 @@ class NodeRuntime(
     callLogAvailable = { BuildConfig.OPENCLAW_ENABLE_CALL_LOG },
     hasRecordAudioPermission = { hasRecordAudioPermission() },
     manualTls = { manualTls.value },
+  )
+
+  private val gatewayEventHandler = GatewayEventHandler(
+    scope = scope,
+    prefs = prefs,
+    json = json,
+    operatorSession = operatorSession,
+    isConnected = { operatorConnected },
   )
 
   private val invokeDispatcher: InvokeDispatcher = InvokeDispatcher(
@@ -406,6 +415,16 @@ class NodeRuntime(
     )
   }
 
+  private val voiceWakeLazy: Lazy<VoiceWakeManager> = lazy {
+    VoiceWakeManager(
+      context = appContext,
+      scope = scope,
+      onCommand = { command -> sendWakeCommand(command) },
+    )
+  }
+  private val voiceWakeManager: VoiceWakeManager
+    get() = voiceWakeLazy.value
+
   private fun syncMainSessionKey(agentId: String?) {
     val resolvedKey = resolveNodeMainSessionKey(agentId)
     if (_mainSessionKey.value == resolvedKey) return
@@ -462,6 +481,7 @@ class NodeRuntime(
     scope.launch {
       refreshBrandingFromGateway()
       refreshAgentsFromGateway()
+      gatewayEventHandler.refreshWakeWordsFromGateway()
     }
   }
 
@@ -591,6 +611,25 @@ class NodeRuntime(
     }
 
     updateHomeCanvasState()
+
+    scope.launch {
+      combine(prefs.voiceWakeMode, prefs.wakeWords, _isForeground) { mode, words, fg ->
+        Triple(mode, words, fg)
+      }.collect { (mode, words, fg) ->
+        val shouldRun =
+          when (mode) {
+            VoiceWakeMode.Off -> false
+            VoiceWakeMode.Foreground -> fg
+            VoiceWakeMode.Always -> true
+          }
+        if (shouldRun) {
+          voiceWakeManager.setTriggerWords(words)
+          voiceWakeManager.start()
+        } else if (voiceWakeLazy.isInitialized()) {
+          voiceWakeManager.stop()
+        }
+      }
+    }
   }
 
   fun setForeground(value: Boolean) {
@@ -680,6 +719,11 @@ class NodeRuntime(
 
   fun setCanvasDebugStatusEnabled(value: Boolean) {
     prefs.setCanvasDebugStatusEnabled(value)
+  }
+
+  fun setWakeWords(words: List<String>) {
+    prefs.setWakeWords(words)
+    gatewayEventHandler.scheduleWakeWordsSyncIfNeeded()
   }
 
   fun setVoiceScreenActive(active: Boolean) {
@@ -938,6 +982,25 @@ class NodeRuntime(
     micCapture.handleGatewayEvent(event, payloadJson)
     talkMode.handleGatewayEvent(event, payloadJson)
     chat.handleGatewayEvent(event, payloadJson)
+    if (event == "voicewake.changed") {
+      gatewayEventHandler.handleVoiceWakeChangedEvent(payloadJson)
+    }
+  }
+
+  private suspend fun sendWakeCommand(command: String) {
+    if (!operatorConnected) return
+    try {
+      val params =
+        buildJsonObject {
+          put("sessionKey", JsonPrimitive(resolveMainSessionKey()))
+          put("message", JsonPrimitive(command))
+          put("thinking", JsonPrimitive(chatThinkingLevel.value))
+          put("timeoutMs", JsonPrimitive(30_000))
+        }
+      operatorSession.request("chat.send", params.toString())
+    } catch (_: Throwable) {
+      // ignore
+    }
   }
 
   private fun parseChatSendRunId(response: String): String? {
