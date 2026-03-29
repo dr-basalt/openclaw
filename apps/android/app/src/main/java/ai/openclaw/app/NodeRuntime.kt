@@ -134,7 +134,7 @@ class NodeRuntime(
     prefs = prefs,
     cameraEnabled = { cameraEnabled.value },
     locationMode = { locationMode.value },
-    voiceWakeMode = { VoiceWakeMode.Off },
+    voiceWakeMode = { prefs.voiceWakeMode.value },
     motionActivityAvailable = { motionHandler.isActivityAvailable() },
     motionPedometerAvailable = { motionHandler.isPedometerAvailable() },
     sendSmsAvailable = { BuildConfig.OPENCLAW_ENABLE_SMS && sms.canSendSms() },
@@ -549,10 +549,6 @@ class NodeRuntime(
   val pendingRunCount: StateFlow<Int> = chat.pendingRunCount
 
   init {
-    if (prefs.voiceWakeMode.value != VoiceWakeMode.Off) {
-      prefs.setVoiceWakeMode(VoiceWakeMode.Off)
-    }
-
     scope.launch {
       prefs.loadGatewayToken()
     }
