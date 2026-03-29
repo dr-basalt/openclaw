@@ -990,6 +990,10 @@ class NodeRuntime(
   private suspend fun sendWakeCommand(command: String) {
     if (!operatorConnected) return
     try {
+      // Enable TTS so the gateway response is spoken aloud, mirroring what
+      // setMicEnabled(true) does for the mic-button voice path.
+      talkMode.ttsOnAllResponses = true
+      talkMode.ensureChatSubscribed()
       val params =
         buildJsonObject {
           put("sessionKey", JsonPrimitive(resolveMainSessionKey()))
