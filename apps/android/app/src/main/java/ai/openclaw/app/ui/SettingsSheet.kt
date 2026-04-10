@@ -68,6 +68,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import ai.openclaw.app.BuildConfig
 import ai.openclaw.app.LocationMode
 import ai.openclaw.app.MainViewModel
+import ai.openclaw.app.VoiceWakeMode
+import ai.openclaw.app.WakeWords
 import ai.openclaw.app.node.DeviceNotificationListenerService
 
 @Composable
@@ -81,6 +83,9 @@ fun SettingsSheet(viewModel: MainViewModel) {
   val locationPreciseEnabled by viewModel.locationPreciseEnabled.collectAsState()
   val preventSleep by viewModel.preventSleep.collectAsState()
   val canvasDebugStatusEnabled by viewModel.canvasDebugStatusEnabled.collectAsState()
+  val voiceWakeMode by viewModel.voiceWakeMode.collectAsState()
+  val wakeWords by viewModel.wakeWords.collectAsState()
+  var wakeWordsText by remember(wakeWords) { mutableStateOf(wakeWords.joinToString(", ")) }
 
   val listState = rememberLazyListState()
   val deviceModel =
@@ -733,6 +738,81 @@ fun SettingsSheet(viewModel: MainViewModel) {
               )
             },
           )
+        }
+      }
+
+      // ── Voice Wake ──
+      item {
+        Text(
+          "VOICE WAKE",
+          style = mobileCaption1.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
+          color = mobileAccent,
+        )
+      }
+      item {
+        Column(modifier = Modifier.settingsRowModifier()) {
+          ListItem(
+            modifier = Modifier.fillMaxWidth(),
+            colors = listItemColors,
+            headlineContent = { Text("Off", style = mobileHeadline) },
+            supportingContent = { Text("Wake word disabled.", style = mobileCallout) },
+            trailingContent = {
+              RadioButton(
+                selected = voiceWakeMode == VoiceWakeMode.Off,
+                onClick = { viewModel.setVoiceWakeMode(VoiceWakeMode.Off) },
+              )
+            },
+          )
+          HorizontalDivider(color = mobileBorder)
+          ListItem(
+            modifier = Modifier.fillMaxWidth(),
+            colors = listItemColors,
+            headlineContent = { Text("Foreground", style = mobileHeadline) },
+            supportingContent = { Text("Listen for wake word while app is open.", style = mobileCallout) },
+            trailingContent = {
+              RadioButton(
+                selected = voiceWakeMode == VoiceWakeMode.Foreground,
+                onClick = { viewModel.setVoiceWakeMode(VoiceWakeMode.Foreground) },
+              )
+            },
+          )
+          HorizontalDivider(color = mobileBorder)
+          ListItem(
+            modifier = Modifier.fillMaxWidth(),
+            colors = listItemColors,
+            headlineContent = { Text("Always", style = mobileHeadline) },
+            supportingContent = { Text("Listen for wake word at all times.", style = mobileCallout) },
+            trailingContent = {
+              RadioButton(
+                selected = voiceWakeMode == VoiceWakeMode.Always,
+                onClick = { viewModel.setVoiceWakeMode(VoiceWakeMode.Always) },
+              )
+            },
+          )
+          HorizontalDivider(color = mobileBorder)
+          OutlinedTextField(
+            value = wakeWordsText,
+            onValueChange = { wakeWordsText = it },
+            label = { Text("Wake words (comma-separated)", style = mobileCaption1, color = mobileTextSecondary) },
+            placeholder = { Text("openclaw, claude", style = mobileCallout, color = mobileTextTertiary) },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+            textStyle = mobileBody.copy(color = mobileText),
+            colors = settingsTextFieldColors(),
+            singleLine = true,
+            supportingText = {
+              Text(
+                "Say a wake word followed by your request. Default: openclaw, claude",
+                style = mobileCaption1,
+                color = mobileTextTertiary,
+              )
+            },
+          )
+          androidx.compose.runtime.LaunchedEffect(wakeWordsText) {
+            val parsed = WakeWords.parseCommaSeparated(wakeWordsText)
+            if (parsed != wakeWords && parsed.isNotEmpty()) {
+              viewModel.setWakeWords(parsed)
+            }
+          }
         }
       }
 

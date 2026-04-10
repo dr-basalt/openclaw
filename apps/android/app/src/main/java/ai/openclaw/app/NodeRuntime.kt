@@ -583,6 +583,9 @@ class NodeRuntime(
         micCapture.setMicEnabled(enabled)
         if (enabled) {
           // Mic on = user is on voice screen and wants TTS responses.
+          // Sync sessionKey so talkMode.handleGatewayEvent doesn't filter out
+          // events that MicCaptureManager sent under the full node session key.
+          talkMode.setMainSessionKey(resolveMainSessionKey())
           talkMode.ttsOnAllResponses = true
           scope.launch { talkMode.ensureChatSubscribed() }
         }
@@ -732,8 +735,12 @@ class NodeRuntime(
   fun setVoiceScreenActive(active: Boolean) {
     if (!active) {
       stopActiveVoiceSession()
+    } else {
+      // Auto-enable mic on voice tab entry for continuous conversation.
+      if (!prefs.talkEnabled.value) {
+        setMicEnabled(true)
+      }
     }
-    // Don't re-enable on active=true; mic toggle drives that
   }
 
   fun setMicEnabled(value: Boolean) {
@@ -741,6 +748,7 @@ class NodeRuntime(
     if (value) {
       // Tapping mic on interrupts any active TTS (barge-in)
       talkMode.stopTts()
+      talkMode.setMainSessionKey(resolveMainSessionKey())
       talkMode.ttsOnAllResponses = true
       scope.launch { talkMode.ensureChatSubscribed() }
     }
@@ -995,6 +1003,7 @@ class NodeRuntime(
     try {
       // Enable TTS so the gateway response is spoken aloud, mirroring what
       // setMicEnabled(true) does for the mic-button voice path.
+      talkMode.setMainSessionKey(resolveMainSessionKey())
       talkMode.ttsOnAllResponses = true
       talkMode.ensureChatSubscribed()
       val params =

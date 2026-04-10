@@ -69,6 +69,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import ai.openclaw.app.MainViewModel
+import ai.openclaw.app.VoiceWakeMode
 import ai.openclaw.app.voice.VoiceConversationEntry
 import ai.openclaw.app.voice.VoiceConversationRole
 import kotlin.math.max
@@ -90,6 +91,8 @@ fun VoiceTabScreen(viewModel: MainViewModel) {
   val micConversation by viewModel.micConversation.collectAsState()
   val micInputLevel by viewModel.micInputLevel.collectAsState()
   val micIsSending by viewModel.micIsSending.collectAsState()
+  val voiceWakeMode by viewModel.voiceWakeMode.collectAsState()
+  val wakeWords by viewModel.wakeWords.collectAsState()
 
   val hasStreamingAssistant = micConversation.any { it.role == VoiceConversationRole.Assistant && it.isStreaming }
   val showThinkingBubble = micIsSending && !hasStreamingAssistant
@@ -160,16 +163,29 @@ fun VoiceTabScreen(viewModel: MainViewModel) {
                 modifier = Modifier.size(48.dp),
                 tint = mobileTextTertiary,
               )
-              Text(
-                "Tap the mic to start",
-                style = mobileHeadline,
-                color = mobileTextSecondary,
-              )
-              Text(
-                "Each pause sends a turn automatically.",
-                style = mobileCallout,
-                color = mobileTextTertiary,
-              )
+              if (voiceWakeMode != VoiceWakeMode.Off) {
+                Text(
+                  "Listening for wake word",
+                  style = mobileHeadline,
+                  color = mobileTextSecondary,
+                )
+                Text(
+                  "Say \"${wakeWords.firstOrNull() ?: "openclaw"}\" followed by your request.",
+                  style = mobileCallout,
+                  color = mobileTextTertiary,
+                )
+              } else {
+                Text(
+                  "Listening…",
+                  style = mobileHeadline,
+                  color = mobileTextSecondary,
+                )
+                Text(
+                  "Each pause sends a turn automatically.",
+                  style = mobileCallout,
+                  color = mobileTextTertiary,
+                )
+              }
             }
           }
         }
