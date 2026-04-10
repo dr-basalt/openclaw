@@ -296,7 +296,7 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
         ) {
           Text("Last gateway error", style = mobileHeadline, color = mobileWarning)
           Text(statusLabel, style = mobileBody.copy(fontFamily = FontFamily.Monospace), color = mobileText)
-          Text("OpenClaw Android ${openClawAndroidVersionLabel()}", style = mobileCaption1, color = mobileTextSecondary)
+          Text("o3clu Android ${openClawAndroidVersionLabel()}", style = mobileCaption1, color = mobileTextSecondary)
           Button(
             onClick = {
               copyGatewayDiagnosticsReport(

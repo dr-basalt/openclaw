@@ -62,11 +62,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "ai.openclaw.app"
+        applicationId = "cloud.ori3com.o3clu"
         minSdk = 31
         targetSdk = 36
-        versionCode = 2026032900
-        versionName = "2026.3.29"
+        versionCode = 2026041000
+        versionName = "2026.4.10"
         ndk {
             // Support all major ABIs — native libs are tiny (~47 KB per ABI)
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
@@ -158,9 +158,9 @@ androidComponents {
                 val flavorName = variant.flavorName?.takeIf { it.isNotBlank() }
                 val outputFileName =
                     if (flavorName == null) {
-                        "openclaw-$versionName-$buildType.apk"
+                        "o3clu-$versionName-$buildType.apk"
                     } else {
-                        "openclaw-$versionName-$flavorName-$buildType.apk"
+                        "o3clu-$versionName-$flavorName-$buildType.apk"
                     }
                 output.outputFileName = outputFileName
             }

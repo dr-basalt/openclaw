@@ -72,6 +72,6 @@ internal fun copyGatewayDiagnosticsReport(
 ) {
   val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return
   val report = buildGatewayDiagnosticsReport(screen = screen, gatewayAddress = gatewayAddress, statusText = statusText)
-  clipboard.setPrimaryClip(ClipData.newPlainText("OpenClaw gateway diagnostics", report))
+  clipboard.setPrimaryClip(ClipData.newPlainText("o3clu gateway diagnostics", report))
   Toast.makeText(context, "Copied gateway diagnostics", Toast.LENGTH_SHORT).show()
 }

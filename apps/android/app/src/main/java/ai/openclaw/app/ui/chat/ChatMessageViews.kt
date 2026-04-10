@@ -190,7 +190,7 @@ fun ChatPendingToolsBubble(toolCalls: List<ChatPendingToolCall>) {
 fun ChatStreamingAssistantBubble(text: String) {
   ChatBubbleContainer(
     style = bubbleStyle("assistant").copy(borderColor = mobileAccent),
-    roleLabel = "OpenClaw · Live",
+    roleLabel = "o3clu · Live",
   ) {
     ChatMarkdown(text = text, textColor = mobileText)
   }
@@ -229,7 +229,7 @@ private fun roleLabel(role: String): String {
   return when (role) {
     "user" -> "You"
     "system" -> "System"
-    else -> "OpenClaw"
+    else -> "o3clu"
   }
 }
 

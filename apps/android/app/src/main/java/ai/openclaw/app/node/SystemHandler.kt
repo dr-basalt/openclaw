@@ -70,9 +70,9 @@ private class AndroidSystemNotificationPoster(
     val normalizedPriority = priority.orEmpty().trim().lowercase()
     val (suffix, importance, name) =
       when (normalizedPriority) {
-        "passive" -> Triple("passive", NotificationManager.IMPORTANCE_LOW, "OpenClaw Passive")
-        "timesensitive" -> Triple("timesensitive", NotificationManager.IMPORTANCE_HIGH, "OpenClaw Time Sensitive")
-        else -> Triple("active", NotificationManager.IMPORTANCE_DEFAULT, "OpenClaw Active")
+        "passive" -> Triple("passive", NotificationManager.IMPORTANCE_LOW, "o3clu Passive")
+        "timesensitive" -> Triple("timesensitive", NotificationManager.IMPORTANCE_HIGH, "o3clu Time Sensitive")
+        else -> Triple("active", NotificationManager.IMPORTANCE_DEFAULT, "o3clu Active")
       }
     val channelId = "$NOTIFICATION_CHANNEL_BASE_ID.$suffix"
     val manager = appContext.getSystemService(NotificationManager::class.java)

@@ -530,7 +530,7 @@ fun OnboardingFlow(viewModel: MainViewModel, modifier: Modifier = Modifier) {
           verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
           Text(
-            "OpenClaw",
+            "o3clu",
             style = onboardingDisplayStyle,
             color = onboardingText,
           )
@@ -1693,7 +1693,7 @@ private fun FinalStep(
               )
             }
             Text(
-              "OpenClaw Android ${openClawAndroidVersionLabel()}",
+              "o3clu Android ${openClawAndroidVersionLabel()}",
               style = onboardingCaption1Style,
               color = onboardingTextSecondary,
             )

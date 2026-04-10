@@ -1114,7 +1114,7 @@ class NodeRuntime(
         HomeCanvasPayload(
           gatewayState = "connecting",
           eyebrow = "Reconnecting",
-          title = "OpenClaw is syncing back up",
+          title = "o3clu is syncing back up",
           subtitle =
             "The gateway session is coming back online. Agent shortcuts should settle automatically in a moment.",
           gatewayLabel = gatewayLabel,
@@ -1128,7 +1128,7 @@ class NodeRuntime(
       HomeCanvasGatewayState.Error, HomeCanvasGatewayState.Offline ->
         HomeCanvasPayload(
           gatewayState = if (state == HomeCanvasGatewayState.Error) "error" else "offline",
-          eyebrow = "Welcome to OpenClaw",
+          eyebrow = "Welcome to o3clu",
           title = "Your phone stays quiet until it is needed",
           subtitle =
             "Pair this device to your gateway to wake it only for real work, keep a live agent overview handy, and avoid battery-draining background loops.",
