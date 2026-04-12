@@ -344,6 +344,8 @@ class NodeRuntime(
       session = operatorSession,
       supportsChatSubscribe = false,
       isConnected = { operatorConnected },
+      onBeforeSpeak = { micCapture.pauseForTts() },
+      onAfterSpeak = { micCapture.resumeAfterTts() },
     ).also { speaker ->
       speaker.setPlaybackEnabled(prefs.speakerEnabled.value)
     }
@@ -415,6 +417,8 @@ class NodeRuntime(
       session = operatorSession,
       supportsChatSubscribe = true,
       isConnected = { operatorConnected },
+      onBeforeSpeak = { micCapture.pauseForTts() },
+      onAfterSpeak = { micCapture.resumeAfterTts() },
     )
   }
 
